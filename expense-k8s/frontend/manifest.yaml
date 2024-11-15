@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: expense
+  labels:
+    project: expense
+    environment: dev
+    tier: web
+spec: 
+  replicas: 3
+  selector:
+    matchLabels:
+      project: expense
+      environment: dev
+      tier: web
+  template:
+    metadata:
+      labels:
+        project: expense
+        environment: dev
+        tier: web
+    spec:
+      containers:
+        - name: frontend
+          image: cekharch/frontend:v1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 120m
+              memory: 120Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: expense
+  labels:
+    project: expense
+    environment: dev
+    tier: web
+spec:
+  type: LoadBalancer
+  selector:
+    project: expense
+    environment: dev
+    tier: web
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+ name: frontend
+ namespace: expense
+spec:
+ scaleTargetRef:
+   apiVersion: apps/v1
+   kind: Deployment
+   name: frontend
+ minReplicas: 1
+ maxReplicas: 10
+ targetCPUUtilizationPercentage: 15 # usually 75 in real environment
